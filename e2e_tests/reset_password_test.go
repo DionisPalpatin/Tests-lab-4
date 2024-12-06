@@ -1,6 +1,8 @@
 package e2e_tests
 
 import (
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -14,11 +16,16 @@ var (
 )
 
 func TestResetPassword(t *testing.T) {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file: " + err.Error())
+	}
+
 	client := &http.Client{}
 	expectReset = httpexpect.WithConfig(httpexpect.Config{
 		BaseURL:  "http://localhost:8080",
 		Client:   client,
-		Reporter: httpexpect.NewRequireReporter(nil),
+		Reporter: httpexpect.NewRequireReporter(t),
 	})
 
 	suite := godog.TestSuite{

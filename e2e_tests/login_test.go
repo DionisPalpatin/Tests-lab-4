@@ -1,6 +1,8 @@
 package e2e_tests
 
 import (
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -14,18 +16,23 @@ var (
 )
 
 func TestLogin(t *testing.T) {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file: " + err.Error())
+	}
+
 	client := &http.Client{}
 	expectLogin = httpexpect.WithConfig(httpexpect.Config{
 		BaseURL:  "http://localhost:8080",
 		Client:   client,
-		Reporter: httpexpect.NewRequireReporter(nil),
+		Reporter: httpexpect.NewRequireReporter(t),
 	})
 
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeLoginScenario,
 		Options: &godog.Options{
 			Format:   "pretty",
-			Paths:    []string{"features/login.feature"},
+			Paths:    []string{"./features/login.feature"},
 			TestingT: t,
 		},
 	}

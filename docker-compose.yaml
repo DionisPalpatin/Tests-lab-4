@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
       context: .
     healthcheck:
-      test: curl --fail http://localhost:8080/status || exit 1
+      test: curl --fail -X GET http://localhost:8080/status || exit 1
       interval: 5s
-      retries: 10
+      retries: 5
       timeout: 10s
     ports:
       - "8080:8080"

@@ -26,13 +26,13 @@ func main() {
 	userEmail = os.Getenv("USER_EMAIL")
 
 	router := gin.Default()
-	router.POST("/status", statusHandler)
+	router.GET("/status", statusHandler)
 	router.POST("/login", loginHandler)
 	router.POST("/login/verify", verifyLoginHandler)
 	router.POST("/password/reset", resetPasswordHandler)
 	router.POST("/password/reset/verify", verifyResetHandler)
 
-	err = router.Run(":8080")
+	err = router.Run("localhost:8080")
 	if err != nil {
 		log.Fatal("Error starting server: " + err.Error())
 	}

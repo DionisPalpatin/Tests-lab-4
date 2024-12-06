@@ -7,7 +7,7 @@ services:
     healthcheck:
       test: curl --fail http://localhost:8080/status || exit 1
       interval: 5s
-      retries: 5
+      retries: 10
       timeout: 10s
     ports:
       - "8080:8080"

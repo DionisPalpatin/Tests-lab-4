@@ -101,7 +101,7 @@ func resetPasswordHandler(ctx *gin.Context) {
 	code := rand.IntN(123456789)
 	codeStr := strconv.Itoa(code)
 	if os.Getenv("THIS_IS_TEST") != "" {
-		codeStr = os.Getenv("TEST_PASSWORD")
+		codeStr = os.Getenv("TEST_CODE")
 	}
 	verificationCodes[request.Email] = codeStr
 	sendEmail(codeStr)

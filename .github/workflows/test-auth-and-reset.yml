@@ -34,6 +34,9 @@ jobs:
       - name: Run test on halstead metrics
         run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
 
+      - name: Run server for tests
+        run: make local-run
+
       - name: Run E2E tests
         run: make run-e2e
 

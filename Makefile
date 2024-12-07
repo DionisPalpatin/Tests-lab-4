@@ -15,5 +15,4 @@ docker-rm:
 
 
 run-e2e: docker-run
-	local-run
 	go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go

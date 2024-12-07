@@ -4,14 +4,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    services:
-      docker:
-        image: docker:latest
-        options: --privileged
-        ports:
-          - 8080:8080
-
     steps:
       - uses: actions/checkout@v4
 

@@ -23,7 +23,7 @@ func TestResetPassword(t *testing.T) {
 
 	client := &http.Client{}
 	expectReset = httpexpect.WithConfig(httpexpect.Config{
-		BaseURL:  "http://localhost:8080",
+		BaseURL:  "http://auth-app:8080",
 		Client:   client,
 		Reporter: httpexpect.NewRequireReporter(t),
 	})

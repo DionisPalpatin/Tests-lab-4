@@ -4,20 +4,33 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:latest
+        options: --privileged
+        ports:
+          - 8080:8080
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Docker
+        run: |
+          docker --version
+          docker-compose --version  
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-            go-version: '1.23.4'
+          go-version: '1.23.4'
 
       - name: Create env file
         shell: bash
         env:
-            ENV: ${{ vars.ENV }}
+          ENV: ${{ vars.ENV }}
         run: |
-            echo $ENV > .env
+          echo $ENV > .env
 
       - name: Install go-complexity-analysis
         run: go install github.com/rauzh/go-complexity-analysis/cmd/complexity@latest
@@ -34,11 +47,16 @@ jobs:
       - name: Run test on halstead metrics
         run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
 
-      - name: Run server for tests
-        run: make local-run
+      - name: Build and start services using Docker Compose
+        run: |
+          docker-compose up -d  # Запуск контейнеров в фоновом режиме
+          docker-compose ps     # Проверка состояния сервисов
+
+#      - name: Wait for auth-app to be ready
+#        run: ./wait-for-it.sh auth-app:8080  # Скрипт ожидания, если требуется
 
       - name: Run E2E tests
-        run: make run-e2e
+        run: go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go
 
-      - name: Remove env
-        run: make docker-rm
+      - name: Clean up Docker containers
+        run: docker-compose down && docker image rm testing-auth-app alpine:latest

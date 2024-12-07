@@ -44,58 +44,18 @@ func statusHandler(ctx *gin.Context) {
 
 func loginHandler(ctx *gin.Context) {
 	var request struct {
-		Email    string `json:"login" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	if request.Password != userPassword || request.Email != userEmail {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
-	}
-
-	code := rand.IntN(123456789)
-	codeStr := strconv.Itoa(code)
-	verificationCodes[request.Email] = codeStr
-	sendEmail(codeStr)
-
-	ctx.JSON(http.StatusOK, gin.H{"massage": "Auth email send successfully"})
-}
-
-func verifyLoginHandler(ctx *gin.Context) {
-	var request struct {
-		Email string `json:"login" binding:"required"`
-		Code  string `json:"code" binding:"required"`
-	}
-
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	code, ok := verificationCodes[request.Email]
-	if !ok || request.Code != code {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
-	}
-
-	delete(verificationCodes, request.Email)
-
-	ctx.JSON(http.StatusOK, gin.H{"massage": "Auth is made successfully"})
-}
-
-func resetPasswordHandler(ctx *gin.Context) {
-	var request struct {
-		Email    string `json:"login" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	if request.Password != userPassword || request.Email != userEmail {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
+		return
 	}
 
 	code := rand.IntN(123456789)
@@ -103,54 +63,117 @@ func resetPasswordHandler(ctx *gin.Context) {
 	if os.Getenv("THIS_IS_TEST") != "" {
 		codeStr = os.Getenv("TEST_CODE")
 	}
-	verificationCodes[request.Email] = codeStr
-	sendEmail(codeStr)
 
-	ctx.JSON(http.StatusOK, gin.H{"massage": "Reset password code send successfully"})
+	verificationCodes[request.Email] = codeStr
+
+	if err := sendEmail(codeStr); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Auth email send successfully"})
 }
 
-func verifyResetHandler(ctx *gin.Context) {
+func verifyLoginHandler(ctx *gin.Context) {
 	var request struct {
-		Email       string `json:"login" binding:"required"`
-		Code        string `json:"code" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required"`
+		Email string `json:"email"`
+		Code  string `json:"code"`
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	code, ok := verificationCodes[request.Email]
 	if !ok || request.Code != code {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
+		return
+	}
+
+	delete(verificationCodes, request.Email)
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Auth is made successfully"})
+}
+
+func resetPasswordHandler(ctx *gin.Context) {
+	var request struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if request.Password != userPassword || request.Email != userEmail {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
+		return
+	}
+
+	code := rand.IntN(123456789)
+	codeStr := strconv.Itoa(code)
+	if os.Getenv("THIS_IS_TEST") != "" {
+		codeStr = os.Getenv("TEST_CODE")
+	}
+
+	verificationCodes[request.Email] = codeStr
+
+	if err := sendEmail(codeStr); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Reset password code send successfully"})
+}
+
+func verifyResetHandler(ctx *gin.Context) {
+	var request struct {
+		Email       string `json:"email"`
+		Code        string `json:"code"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	code, ok := verificationCodes[request.Email]
+	if !ok || request.Code != code {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
+		return
 	}
 
 	delete(verificationCodes, request.Email)
 	userPassword = request.NewPassword
 
-	ctx.JSON(http.StatusOK, gin.H{"massage": "Password is changed successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Password is changed successfully"})
 }
 
-func sendEmail(code string) {
+func sendEmail(code string) error {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		return fmt.Errorf("error loading .env file: %v", err)
 	}
 
-	senderEmail := os.Getenv("SENDER_EMAIL_ADDRESS")
+	senderName := os.Getenv("SENDER_LOGIN")
 	senderPassword := os.Getenv("SENDER_EMAIL_PASSWORD")
 	smtpHost := os.Getenv("SMTP_SERVER")
 	smtpPort := 587
 	userEmail := os.Getenv("USER_EMAIL")
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", senderEmail)
+	m.SetHeader("From", senderName)
 	m.SetHeader("To", userEmail)
 	m.SetHeader("Subject", "Your Verification Code")
 	m.SetBody("text/plain", fmt.Sprintf("Your verification code is: %s", code))
 
-	d := gomail.NewDialer(smtpHost, smtpPort, senderEmail, senderPassword)
+	d := gomail.NewDialer(smtpHost, smtpPort, senderName, senderPassword)
 	if err := d.DialAndSend(m); err != nil {
-		log.Fatalf("Error sending verification code: %v", err)
+		return fmt.Errorf("error sending verification code: %v", err)
 	}
+
+	return nil
 }

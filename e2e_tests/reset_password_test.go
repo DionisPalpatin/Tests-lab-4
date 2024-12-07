@@ -70,9 +70,9 @@ func resetPasswordWith2FA(ctx *godog.ScenarioContext) {
 	ctx.Step(`^user send "([^"]*)" request to "([^"]*)"$`, func(method, endpoint string) error {
 		response = expectReset.Request(method, endpoint).
 			WithJSON(map[string]string{
-				"email":       os.Getenv("USER_EMAIL"),
-				"code":        os.Getenv("TEST_CODE"),
-				"newPassword": os.Getenv("NEW_USER_PASSWORD"),
+				"email":        os.Getenv("USER_EMAIL"),
+				"code":         os.Getenv("TEST_CODE"),
+				"new_password": os.Getenv("NEW_USER_PASSWORD"),
 			}).Expect()
 		return nil
 	})

@@ -11,7 +11,6 @@ services:
       timeout: 10s
     ports:
       - "8080:8080"
-      - "587:587"
     networks:
       - mynetwork
     dns:

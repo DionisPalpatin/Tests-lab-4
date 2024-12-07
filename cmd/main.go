@@ -32,8 +32,6 @@ func main() {
 	router.POST("/password/reset", resetPasswordHandler)
 	router.POST("/password/reset/verify", verifyResetHandler)
 
-	print(2)
-
 	err = router.Run(":8080")
 	if err != nil {
 		log.Fatal("Error starting server: " + err.Error())
@@ -163,7 +161,7 @@ func sendEmail(code string) error {
 	senderName := os.Getenv("SENDER_LOGIN")
 	senderPassword := os.Getenv("SENDER_EMAIL_PASSWORD")
 	smtpHost := os.Getenv("SMTP_SERVER")
-	smtpPort := 587
+	smtpPort := 465
 	userEmail := os.Getenv("USER_EMAIL")
 
 	m := gomail.NewMessage()

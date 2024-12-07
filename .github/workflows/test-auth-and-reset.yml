@@ -45,7 +45,7 @@ jobs:
           docker compose ps
 
       - name: Wait for auth-app to be ready
-        run: ./wait-for-it.sh auth-app:8080  # Скрипт ожидания, если требуется
+        run: chmod +x wait-for-it.sh && ./wait-for-it.sh auth-app:8080  # Скрипт ожидания, если требуется
 
       - name: Run E2E tests
         run: go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go

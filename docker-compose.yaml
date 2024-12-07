@@ -13,6 +13,9 @@ services:
       - "8080:8080"
     networks:
       - mynetwork
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   check-app:
     container_name: check-app
@@ -22,6 +25,9 @@ services:
         condition: service_healthy
     networks:
       - mynetwork
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 
 networks:

@@ -11,6 +11,8 @@ services:
       timeout: 10s
     ports:
       - "8080:8080"
+    networks:
+      - mynetwork
 
   check-app:
     container_name: check-app
@@ -18,3 +20,10 @@ services:
     depends_on:
       auth-app:
         condition: service_healthy
+    networks:
+      - mynetwork
+
+
+networks:
+  mynetwork:
+    driver: bridge

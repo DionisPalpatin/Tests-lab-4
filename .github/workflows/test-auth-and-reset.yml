@@ -19,6 +19,12 @@ jobs:
         run: |
             echo $ENV > .env
 
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
       - name: Run E2E tests
         run: make run-e2e
 

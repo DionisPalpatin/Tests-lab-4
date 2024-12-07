@@ -32,6 +32,8 @@ func main() {
 	router.POST("/password/reset", resetPasswordHandler)
 	router.POST("/password/reset/verify", verifyResetHandler)
 
+	print(2)
+
 	err = router.Run(":8080")
 	if err != nil {
 		log.Fatal("Error starting server: " + err.Error())

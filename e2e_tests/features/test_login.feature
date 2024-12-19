@@ -1,4 +1,4 @@
-Feaature: Login with 2FA (email, messenger, etc)
+Feature: Login with 2FA (email, messenger, etc)
 
 Scenario: User login with 2FA
     When user send "POST" request on "/login"

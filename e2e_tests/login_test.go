@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	expectLogin *httpexpect.Expect
+	expectRequest *httpexpect.Expect
 )
 
 func TestLogin(t *testing.T) {
@@ -21,32 +21,35 @@ func TestLogin(t *testing.T) {
 		log.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	client := &http.Client{}
-	expectLogin = httpexpect.WithConfig(httpexpect.Config{
+	expectRequest = httpexpect.WithConfig(httpexpect.Config{
 		BaseURL:  "http://localhost:8080",
-		Client:   client,
+		Client:   &http.Client{},
 		Reporter: httpexpect.NewRequireReporter(t),
 	})
 
 	suite := godog.TestSuite{
-		ScenarioInitializer: InitializeLoginScenario,
+		ScenarioInitializer: testLoginScenarioInitializer,
 		Options: &godog.Options{
 			Format:   "pretty",
-			Paths:    []string{"./features/login.feature"},
+			Paths:    []string{"./features/test_login.feature"},
 			TestingT: t,
 		},
 	}
 
 	if suite.Run() != 0 {
-		t.Fatal("non-zero status returned, failed to run login feature tests")
+		t.Fatal("Some errors occurred while running test (login)")
 	}
 }
 
-func loginWith2FA(ctx *godog.ScenarioContext) {
+func testLoginScenarioInitializer(ctx *godog.ScenarioContext) {
+	login(ctx)
+}
+
+func login(ctx *godog.ScenarioContext) {
 	var response *httpexpect.Response
 
 	ctx.Step(`^User send "([^"]*)" request to "([^"]*)"$`, func(method, endpoint string) error {
-		response = expectLogin.Request(method, endpoint).
+		response = expectRequest.Request(method, endpoint).
 			WithJSON(map[string]string{
 				"email":    os.Getenv("USER_EMAIL"),
 				"password": os.Getenv("USER_PASSWORD"),
@@ -68,7 +71,7 @@ func loginWith2FA(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.Step(`^user send "([^"]*)" request to "([^"]*)"$`, func(method, endpoint string) error {
-		response = expectLogin.Request(method, endpoint).
+		response = expectRequest.Request(method, endpoint).
 			WithJSON(map[string]string{
 				"email": os.Getenv("USER_EMAIL"),
 				"code":  os.Getenv("TEST_CODE"),
@@ -87,8 +90,4 @@ func loginWith2FA(ctx *godog.ScenarioContext) {
 		})
 		return nil
 	})
-}
-
-func InitializeLoginScenario(ctx *godog.ScenarioContext) {
-	loginWith2FA(ctx)
 }

@@ -23,7 +23,7 @@ func TestResetPassword(t *testing.T) {
 
 	client := &http.Client{}
 	expectReset = httpexpect.WithConfig(httpexpect.Config{
-		BaseURL:  "http://auth-app:8080",
+		BaseURL:  "http://localhost:8080",
 		Client:   client,
 		Reporter: httpexpect.NewRequireReporter(t),
 	})
@@ -32,7 +32,7 @@ func TestResetPassword(t *testing.T) {
 		ScenarioInitializer: InitializeResetPasswordScenario,
 		Options: &godog.Options{
 			Format:   "pretty",
-			Paths:    []string{"features/reset.feature"},
+			Paths:    []string{"features/test_password_reset.feature"},
 			TestingT: t,
 		},
 	}

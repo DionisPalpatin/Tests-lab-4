@@ -7,11 +7,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker
-        run: |
-          docker --version
-          docker compose --version  
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -23,6 +18,9 @@ jobs:
           ENV: ${{ vars.ENV }}
         run: |
           echo $ENV > .env
+
+      - name: Install dependencies
+        run: go mod tidy
 
       - name: Install go-complexity-analysis
         run: go install github.com/rauzh/go-complexity-analysis/cmd/complexity@latest
@@ -39,16 +37,15 @@ jobs:
       - name: Run test on halstead metrics
         run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
 
-      - name: Build and start services using Docker Compose
+      - name: Start the server in the background
         run: |
-          docker compose up -d
-          docker compose ps
-
-      - name: Wait for auth-app to be ready
-        run: chmod +x wait-for-it.sh && ./wait-for-it.sh localhost:8080  # Скрипт ожидания, если требуется
+          go run ./cmd/main.go &
+          sleep 5 # Задержка для ожидания старта сервера
 
       - name: Run E2E tests
         run: go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go
 
-      - name: Clean up Docker containers
-        run: docker-compose down && docker image rm testing-auth-app alpine:latest
+      - name: Stop background server
+        shell: bash
+        run: |
+          pkill -f 'go run ./cmd/main.go'

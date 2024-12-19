@@ -14,12 +14,19 @@ jobs:
         with:
           go-version: '1.23.4'
 
-      - name: Create env file from environment variables
+      - name: Create env file from environment secrets
         shell: bash
+        env:
+          # Использование секретов
+          USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+          USER_NEW_PASSWORD: ${{ secrets.USER_NEW_PASSWORD }}
+          TOTP_SECRET: ${{ secrets.TOTP_SECRET }}
+          THIS_IS_TEST: ${{ secrets.THIS_IS_TEST }}
         run: |
-          # Записываем все переменные окружения в файл .env
-          printenv > .env
-          cat .env
+          # Записываем в файл .env
+          echo "VAR1=$VAR1" >> .env
+          echo "VAR2=$VAR2" >> .env
           sleep 5
 
       - name: Install dependencies

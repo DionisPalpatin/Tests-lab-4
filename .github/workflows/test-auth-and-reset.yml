@@ -48,7 +48,7 @@ jobs:
       - name: Stop background server
         shell: bash
         run: |
-          pkill -f 'go run ./cmd/main.go'
+          pkill -f 'go run'
 
       - name: Start the server in the background for the second time
         run: |

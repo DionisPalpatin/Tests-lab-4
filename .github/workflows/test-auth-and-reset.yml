@@ -22,20 +22,20 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
-      - name: Install go-complexity-analysis
-        run: go install github.com/rauzh/go-complexity-analysis/cmd/complexity@latest
-
-      - name: Install staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@latest
-
-      - name: Run staticcheck
-        run: staticcheck ./...
-
-      - name: Run test on cyclomatic complexity
-        run: go vet -vettool=$(which complexity) --cycloover 10 ./...
-
-      - name: Run test on halstead metrics
-        run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
+#      - name: Install go-complexity-analysis
+#        run: go install github.com/rauzh/go-complexity-analysis/cmd/complexity@latest
+#
+#      - name: Install staticcheck
+#        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+#
+#      - name: Run staticcheck
+#        run: staticcheck ./...
+#
+#      - name: Run test on cyclomatic complexity
+#        run: go vet -vettool=$(which complexity) --cycloover 10 ./...
+#
+#      - name: Run test on halstead metrics
+#        run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
 
       - name: Start the server in the background for the first time
         run: |

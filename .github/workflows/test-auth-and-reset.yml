@@ -62,6 +62,7 @@ jobs:
         shell: bash
         run: |
           ps aux
+          pkill -f 'go run ./cmd/main.go'
 
       - name: Start the server in the background for the second time
         run: |

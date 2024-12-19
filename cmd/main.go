@@ -24,6 +24,8 @@ func main() {
 	userPassword = os.Getenv("USER_PASSWORD")
 	userEmail = os.Getenv("USER_EMAIL")
 
+	fmt.Print("user email: ", userEmail)
+
 	initTOTP()
 
 	router := gin.Default()

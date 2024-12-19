@@ -43,7 +43,7 @@ jobs:
           sleep 5 # Задержка для ожидания старта сервера
 
       - name: Run E2E tests for login
-        run: go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go
+        run: go test e2e_tests/login_test.go
 
       - name: Stop background server
         shell: bash

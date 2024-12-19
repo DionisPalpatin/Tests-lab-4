@@ -18,6 +18,7 @@ jobs:
           ENV: ${{ vars.ENV }}
         run: |
           echo $ENV > .env
+          sleep 5
 
       - name: Install dependencies
         run: go mod tidy

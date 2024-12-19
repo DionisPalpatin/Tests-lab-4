@@ -37,13 +37,26 @@ jobs:
       - name: Run test on halstead metrics
         run: go vet -vettool=$(which complexity) --halsteadover 50 ./...
 
-      - name: Start the server in the background
+      - name: Start the server in the background for the first time
         run: |
           go run ./cmd/main.go &
           sleep 5 # Задержка для ожидания старта сервера
 
-      - name: Run E2E tests
+      - name: Run E2E tests for login
         run: go test e2e_tests/login_test.go && go test e2e_tests/reset_password_test.go
+
+      - name: Stop background server
+        shell: bash
+        run: |
+          pkill -f 'go run ./cmd/main.go'
+
+      - name: Start the server in the background for the second time
+        run: |
+          go run ./cmd/main.go &
+          sleep 5 # Задержка для ожидания старта сервера
+
+      - name: Run E2E tests for reset password
+        run: go test e2e_tests/reset_password_test.go
 
       - name: Stop background server
         shell: bash

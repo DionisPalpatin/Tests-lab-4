@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gopkg.in/gomail.v2"
+	_ "github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 	"log"
-	"math/rand/v2"
 	"net/http"
 	"os"
-	"strconv"
 )
 
-var verificationCodes = make(map[string]string)
+var totpSecret string
 var userPassword string
 var userEmail string
 
@@ -25,6 +24,8 @@ func main() {
 	userPassword = os.Getenv("USER_PASSWORD")
 	userEmail = os.Getenv("USER_EMAIL")
 
+	initTOTP()
+
 	router := gin.Default()
 	router.GET("/status", statusHandler)
 	router.POST("/login", loginHandler)
@@ -35,6 +36,23 @@ func main() {
 	err = router.Run(":8080")
 	if err != nil {
 		log.Fatal("Error starting server: " + err.Error())
+	}
+}
+
+func initTOTP() {
+	totpKey, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "BDDTests",
+		AccountName: userEmail,
+	})
+
+	if err != nil {
+		log.Fatalf("Error generating TOTP secret: %v", err)
+	}
+
+	if os.Getenv("THIS_IS_TEST") != "" {
+		totpSecret = os.Getenv("TOTP_SECRET")
+	} else {
+		totpSecret = totpKey.Secret()
 	}
 }
 
@@ -58,20 +76,7 @@ func loginHandler(ctx *gin.Context) {
 		return
 	}
 
-	code := rand.IntN(123456789)
-	codeStr := strconv.Itoa(code)
-	if os.Getenv("THIS_IS_TEST") != "" {
-		codeStr = os.Getenv("TEST_CODE")
-	}
-
-	verificationCodes[request.Email] = codeStr
-
-	if err := sendEmail(codeStr); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "Auth email send successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Enter the TOTP code from your app"})
 }
 
 func verifyLoginHandler(ctx *gin.Context) {
@@ -85,13 +90,10 @@ func verifyLoginHandler(ctx *gin.Context) {
 		return
 	}
 
-	code, ok := verificationCodes[request.Email]
-	if !ok || request.Code != code {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
+	if request.Email != userEmail || !totp.Validate(request.Code, totpSecret) {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid TOTP code"})
 		return
 	}
-
-	delete(verificationCodes, request.Email)
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Auth is made successfully"})
 }
@@ -112,20 +114,7 @@ func resetPasswordHandler(ctx *gin.Context) {
 		return
 	}
 
-	code := rand.IntN(123456789)
-	codeStr := strconv.Itoa(code)
-	if os.Getenv("THIS_IS_TEST") != "" {
-		codeStr = os.Getenv("TEST_CODE")
-	}
-
-	verificationCodes[request.Email] = codeStr
-
-	if err := sendEmail(codeStr); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "Reset password code send successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Enter the TOTP code from your app"})
 }
 
 func verifyResetHandler(ctx *gin.Context) {
@@ -140,40 +129,12 @@ func verifyResetHandler(ctx *gin.Context) {
 		return
 	}
 
-	code, ok := verificationCodes[request.Email]
-	if !ok || request.Code != code {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong code"})
+	if request.Email != userEmail || !totp.Validate(request.Code, totpSecret) {
+		fmt.Print(request.Email, userEmail)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid TOTP code"})
 		return
 	}
 
-	delete(verificationCodes, request.Email)
 	userPassword = request.NewPassword
-
 	ctx.JSON(http.StatusOK, gin.H{"message": "Password is changed successfully"})
-}
-
-func sendEmail(code string) error {
-	err := godotenv.Load()
-	if err != nil {
-		return fmt.Errorf("error loading .env file: %v", err)
-	}
-
-	senderName := os.Getenv("SENDER_LOGIN")
-	senderPassword := os.Getenv("SENDER_EMAIL_PASSWORD")
-	smtpHost := os.Getenv("SMTP_SERVER")
-	smtpPort := 465
-	userEmail := os.Getenv("USER_EMAIL")
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", senderName)
-	m.SetHeader("To", userEmail)
-	m.SetHeader("Subject", "Your Verification Code")
-	m.SetBody("text/plain", fmt.Sprintf("Your verification code is: %s", code))
-
-	d := gomail.NewDialer(smtpHost, smtpPort, senderName, senderPassword)
-	if err := d.DialAndSend(m); err != nil {
-		return fmt.Errorf("error sending verification code: %v", err)
-	}
-
-	return nil
 }

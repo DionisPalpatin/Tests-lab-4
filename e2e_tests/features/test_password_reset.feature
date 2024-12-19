@@ -6,7 +6,7 @@ Scenario: User reset password with 2FA
   And the response on /password/reset should match json:
       """
       {
-        "message": "Reset password code send successfully"
+        "message": "Enter the TOTP code from your app"
       }
       """
   And user send "POST" request to "/password/reset/verify"

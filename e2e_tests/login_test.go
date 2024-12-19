@@ -2,10 +2,12 @@ package e2e_tests
 
 import (
 	"github.com/joho/godotenv"
+	"github.com/pquerna/otp/totp"
 	"log"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/gavv/httpexpect/v2"
@@ -13,12 +15,18 @@ import (
 
 var (
 	expectRequest *httpexpect.Expect
+	testLoginCode string
 )
 
 func TestLogin(t *testing.T) {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	testLoginCode, err = totp.GenerateCode(os.Getenv("TOTP_SECRET"), time.Now())
+	if err != nil {
+		t.Fatalf("Failed to generate TOTP code: %v", err)
 	}
 
 	expectRequest = httpexpect.WithConfig(httpexpect.Config{
@@ -74,7 +82,7 @@ func login(ctx *godog.ScenarioContext) {
 		response = expectRequest.Request(method, endpoint).
 			WithJSON(map[string]string{
 				"email": os.Getenv("USER_EMAIL"),
-				"code":  os.Getenv("TEST_CODE"),
+				"code":  testLoginCode,
 			}).Expect()
 		return nil
 	})

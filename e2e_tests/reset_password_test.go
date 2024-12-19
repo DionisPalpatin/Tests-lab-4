@@ -2,23 +2,31 @@ package e2e_tests
 
 import (
 	"github.com/joho/godotenv"
+	"github.com/pquerna/otp/totp"
 	"log"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/gavv/httpexpect/v2"
 )
 
 var (
-	expectReset *httpexpect.Expect
+	expectReset      *httpexpect.Expect
+	testPasswordCode string
 )
 
 func TestResetPassword(t *testing.T) {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	testPasswordCode, err = totp.GenerateCode(os.Getenv("TOTP_SECRET"), time.Now())
+	if err != nil {
+		t.Fatalf("Failed to generate TOTP code: %v", err)
 	}
 
 	client := &http.Client{}
@@ -62,7 +70,7 @@ func resetPasswordWith2FA(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^the response on /password/reset should match json:$`, func(expectedJSON *godog.DocString) error {
 		response.JSON().Object().IsEqual(map[string]interface{}{
-			"message": "Reset password code send successfully",
+			"message": "Enter the TOTP code from your app",
 		})
 		return nil
 	})
@@ -71,7 +79,7 @@ func resetPasswordWith2FA(ctx *godog.ScenarioContext) {
 		response = expectReset.Request(method, endpoint).
 			WithJSON(map[string]string{
 				"email":        os.Getenv("USER_EMAIL"),
-				"code":         os.Getenv("TEST_CODE"),
+				"code":         testPasswordCode,
 				"new_password": os.Getenv("NEW_USER_PASSWORD"),
 			}).Expect()
 		return nil

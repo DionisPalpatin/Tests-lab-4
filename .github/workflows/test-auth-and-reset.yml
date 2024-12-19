@@ -25,7 +25,7 @@ jobs:
           THIS_IS_TEST: ${{ secrets.THIS_IS_TEST }}
         run: |
           # Записываем в файл .env
-          echo "USER_EMAIL=$USER_EMAIL" >> .env
+          echo "USER_EMAIL=$USER_EMAIL" > .env
           echo "USER_PASSWORD=$USER_PASSWORD" >> .env
           echo "USER_NEW_PASSWORD=$USER_NEW_PASSWORD" >> .env
           echo "TOTP_SECRET=$TOTP_SECRET" >> .env

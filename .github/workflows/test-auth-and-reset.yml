@@ -48,7 +48,7 @@ jobs:
       - name: Stop background server
         shell: bash
         run: |
-          ps aux | grep 'main.exe'
+          ps aux
 
 #      - name: Start the server in the background for the second time
 #        run: |

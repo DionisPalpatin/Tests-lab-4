@@ -25,8 +25,11 @@ jobs:
           THIS_IS_TEST: ${{ secrets.THIS_IS_TEST }}
         run: |
           # Записываем в файл .env
-          echo "VAR1=$VAR1" >> .env
-          echo "VAR2=$VAR2" >> .env
+          echo "USER_EMAIL=$USER_EMAIL" >> .env
+          echo "USER_PASSWORD=$USER_PASSWORD" >> .env
+          echo "USER_NEW_PASSWORD=$USER_NEW_PASSWORD" >> .env
+          echo "TOTP_SECRET=$TOTP_SECRET" >> .env
+          echo "THIS_IS_TEST=$THIS_IS_TEST" >> .env
           sleep 5
 
       - name: Install dependencies
